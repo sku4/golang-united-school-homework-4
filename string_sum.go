@@ -2,6 +2,10 @@ package string_sum
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"unicode"
 )
 
 //use these errors as appropriate, wrapping them with fmt.Errorf function
@@ -23,5 +27,53 @@ var (
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
 func StringSum(input string) (output string, err error) {
-	return "", nil
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return "", fmt.Errorf("%w", errorEmptyInput)
+	}
+
+	operands := []rune{'+', '-'}
+	runes := []rune(input)
+	numbers := make([]int, 0)
+	numstr := ""
+	existOperand := false
+	for _, r := range runes {
+		isOperand := r == operands[0] || r == operands[1]
+		if isOperand {
+			if !existOperand {
+				if r != '+' {
+					numstr += string(r)
+				}
+				existOperand = true
+			} else {
+				i, e := strconv.Atoi(numstr)
+				if e != nil {
+					return "", fmt.Errorf("%w", e)
+				}
+				numbers = append(numbers, i)
+				numstr = ""
+				if r != '+' {
+					numstr += string(r)
+				}
+				existOperand = false
+			}
+			continue
+		}
+
+		if unicode.IsDigit(r) || unicode.IsLetter(r) {
+			numstr += string(r)
+			existOperand = true
+		}
+	}
+	i, e := strconv.Atoi(numstr)
+	if e != nil {
+		return "", fmt.Errorf("%w", e)
+	}
+	numbers = append(numbers, i)
+
+	if len(numbers) != 2 {
+		return "", fmt.Errorf("%w", errorNotTwoOperands)
+	}
+
+	return strconv.Itoa(numbers[0] + numbers[1]), nil
 }
